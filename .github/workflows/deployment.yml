@@ -1,0 +1,73 @@
+name: Deployment
+
+on:
+  push:
+    branches:
+      - production
+
+permissions:
+  id-token: write
+  contents: write
+  statuses: write
+  packages: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      SERVICE_NAME: nova
+      CLUSTER_NAME: nova-cluster
+      IMAGE_URI: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/$SERVICE_NAME:latest
+
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: 1.23.1
+
+      - name: Install project dependencies
+        run: go mod download
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Configure AWS credentials for Amazon ECR
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Docker Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+        with:
+          mask-password: "true"
+
+      - name: Docker Metadata
+        uses: docker/metadata-action@v5
+        id: docker_meta
+        with:
+          images: $IMAGE_URI
+
+      - name: Build and push container image
+        uses: docker/build-push-action@v6
+        id: build_image
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/arm64
+          push: true
+          tags: $SERVICE_NAME
+          labels: $IMAGE_URI
+
+      - name: Deploy
+        run: |
+          aws ecs update-service --cluster $CLUSTER_NAME --service $SERVICE_NAME --force-new-deployment
+          aws ecs wait services-stable --cluster $CLUSTER_NAME --services $SERVICE_NAME
