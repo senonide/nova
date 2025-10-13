@@ -61,8 +61,6 @@ jobs:
           fi
 
       - name: "Code consistency checks"
-        uses: golangci/golangci-lint-action@v6
+        uses: golangci/golangci-lint-action@v8
         with:
-          version: v1.61.0
-          skip-cache: true
-          args: -v
+          version: v2.5

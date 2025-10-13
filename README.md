@@ -3,8 +3,8 @@ Template repository to create Go projects
 
 ## Prerequisites
 Before you can build and run this project, ensure you have the following installed on your machine:
-- Go (version 1.23.1+)
-- golangci-lint for linting
+- Go (version 1.24.3+)
+- golangci-lint for linting (version 2.5.0)
 
 ## Installation
 ### Clone the repository:
@@ -20,7 +20,7 @@ go mod tidy
 
 ### Install golangci-lint (if not already installed):
 ```bash
-go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.5.0
 ```
 
 ### Makefile Commands

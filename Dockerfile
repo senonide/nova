@@ -1,10 +1,10 @@
-FROM public.ecr.aws/docker/library/golang:1.23.1-alpine3.18 AS builder
+FROM public.ecr.aws/docker/library/golang:alpine3.22 AS builder
 WORKDIR /nova
 COPY . .
 RUN go mod download
 RUN go test -race -count=1 ./...
 RUN mkdir build
-RUN go build -o build/nova .
+RUN go build -o build/nova ./cmd/server/main.go
 
 FROM public.ecr.aws/docker/library/alpine:latest AS runner
 WORKDIR /nova
